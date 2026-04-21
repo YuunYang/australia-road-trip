@@ -13,12 +13,11 @@ export default function App() {
   const { isMobile } = useWindowSize()
 
   const handleDaySelect = useCallback((day: number) => {
-    setSelectedDay(prev => {
-      if (prev === day) return prev  // no change, sheet stays
-      return day
-    })
-    setSheetState('peek')
-    setTimeout(() => detailRef.current?.scrollTo({ top: 0, behavior: 'smooth' }), 50)
+    setSelectedDay(day)
+    // Only open to peek if the sheet was hidden — if user is in 'full' reading
+    // details, navigating to another day should keep them in 'full'.
+    setSheetState(prev => (prev === 'hidden' ? 'peek' : prev))
+    detailRef.current?.scrollTo({ top: 0 })
   }, [])
 
   const handleSheetStateChange = useCallback((s: SheetState) => {
@@ -69,7 +68,7 @@ function MobileLayout({ selectedDay, sheetState, currentDay, onDaySelect, onShee
           position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)',
           background: 'rgba(11,21,32,0.88)', border: '1px solid var(--border-warm)',
           borderRadius: 20, padding: '8px 18px',
-          backdropFilter: 'blur(10px)', zIndex: 10, whiteSpace: 'nowrap',
+          backdropFilter: 'blur(10px)', zIndex: 1500, whiteSpace: 'nowrap',
           pointerEvents: 'none',
         }}>
           <div style={{ fontSize: 11, color: 'var(--sand)', fontFamily: 'var(--font-display)' }}>

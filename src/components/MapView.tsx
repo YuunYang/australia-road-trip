@@ -37,27 +37,41 @@ export default memo(function MapView({ selectedDay, onDaySelect }: Props) {
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
 
+    const isTouch = typeof window !== 'undefined' && matchMedia('(pointer:coarse)').matches
     const map = L.map(containerRef.current, {
       center: [-36.5, 149.0], zoom: 7,
-      zoomControl: true, attributionControl: false,
+      zoomControl: !isTouch, attributionControl: false,
+      preferCanvas: true,          // canvas renderer is much faster on mobile for polylines
+      zoomSnap: 0.5, zoomDelta: 0.5,
+      wheelPxPerZoomLevel: 80,
+      fadeAnimation: false,        // reduce per-frame paint cost
     })
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      updateWhenIdle: isTouch,     // avoid fetching tiles while panning on mobile
+      keepBuffer: 1,
+    }).addTo(map)
     L.control.attribution({ prefix: '' })
       .addAttribution('© <a href="https://carto.com">CARTO</a> © <a href="https://openstreetmap.org">OSM</a>')
       .addTo(map)
 
-    // Dim dashed full route
+    // Dim dashed full route (visual only)
     L.polyline(FULL_ROUTE_COORDS, {
-      color: 'rgba(255,255,255,0.15)', weight: 2, dashArray: '5 6',
+      color: 'rgba(255,255,255,0.18)', weight: 2, dashArray: '5 6',
+      interactive: false,          // let click pass through to hit polylines below
     }).addTo(map)
 
-    // Invisible fat polyline per day's segment — provides a click target
+    // Fat-but-faint polyline per day — a comfortable tap target.
+    // For stationary days we still draw one at the point (so tapping the dot area registers too).
     TRIP_DAYS.forEach(day => {
       const { from, to } = day
-      if (from.lat === to.lat && from.lng === to.lng) return  // stationary day, skip
+      const stationary = from.lat === to.lat && from.lng === to.lng
+      if (stationary) return  // marker itself is the tap target; skip zero-length polyline
       L.polyline([[from.lat, from.lng], [to.lat, to.lng]], {
-        color: day.color, weight: 28, opacity: 0.001,
+        color: day.color,
+        weight: isTouch ? 36 : 28,
+        opacity: 0.01,             // high enough for all browsers to hit-test, invisible enough visually
       }).addTo(map).on('click', () => onDaySelect(day.day))
     })
 
@@ -117,7 +131,7 @@ export default memo(function MapView({ selectedDay, onDaySelect }: Props) {
 
     animRouteRef.current = L.polyline(
       [[day.from.lat, day.from.lng], [day.to.lat, day.to.lng]],
-      { color: day.color, weight: 5, opacity: 0.85 }
+      { color: day.color, weight: 5, opacity: 0.85, interactive: false }
     ).addTo(map)
 
     map.flyTo(day.mapCenter, day.mapZoom, { duration: 0.8 })
@@ -127,8 +141,8 @@ export default memo(function MapView({ selectedDay, onDaySelect }: Props) {
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 
-      {/* Legend */}
-      <div style={{
+      {/* Legend — hidden on mobile (covered by the bottom sheet) */}
+      <div className="map-legend" style={{
         position: 'absolute', bottom: 16, right: 16, zIndex: 999,
         background: 'rgba(11,21,32,0.88)',
         border: '1px solid var(--border-warm)',

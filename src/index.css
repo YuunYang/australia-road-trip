@@ -36,6 +36,10 @@ body {
   font-family: var(--font-body);
   height: 100vh;
   overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
 }
 
 #root {
@@ -51,7 +55,17 @@ body {
 
 /* Leaflet overrides */
 .leaflet-container { background: #071018; font-family: var(--font-body); }
-.leaflet-tile { filter: brightness(0.75) saturate(0.7) hue-rotate(5deg); }
+/* Apply filter on the tile pane (single layer) instead of per-tile — much cheaper on mobile */
+.leaflet-tile-pane { filter: brightness(0.78) saturate(0.72) hue-rotate(5deg); will-change: transform; }
+.leaflet-tile { will-change: auto; }
+
+/* On mobile the bottom sheet covers the bottom-right corner, so hide the
+   in-map legend and the Leaflet attribution bar there. */
+@media (max-width: 767px) {
+  .map-legend { display: none; }
+  .leaflet-control-attribution { display: none !important; }
+  .leaflet-control-zoom { display: none !important; }
+}
 
 .leaflet-popup-content-wrapper {
   background: var(--bg-card);

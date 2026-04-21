@@ -1,5 +1,6 @@
 import { memo } from 'react'
 import { Day } from '../data/tripData'
+import Comments from './Comments'
 
 interface Props { day: Day }
 
@@ -174,6 +175,11 @@ export default memo(function DayDetail({ day }: Props) {
             搜索 Airbnb 住宿
           </a>
         </div>
+      </Section>
+
+      {/* ── Comments ── */}
+      <Section title="💬 留言板" accent={day.color}>
+        <Comments day={day.day} accent={day.color} />
       </Section>
 
       {/* ── Charging ── */}
