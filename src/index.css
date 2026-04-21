@@ -55,8 +55,9 @@ body {
 
 /* Leaflet overrides */
 .leaflet-container { background: #071018; font-family: var(--font-body); }
-/* Apply filter on the tile pane (single layer) instead of per-tile — much cheaper on mobile */
-.leaflet-tile-pane { filter: brightness(0.78) saturate(0.72) hue-rotate(5deg); will-change: transform; }
+/* `dark_nolabels` tiles already match the palette — no CSS filter needed,
+   which was a per-frame GPU cost on mobile. */
+.leaflet-tile-pane { will-change: transform; }
 .leaflet-tile { will-change: auto; }
 
 /* On mobile the bottom sheet covers the bottom-right corner, so hide the
