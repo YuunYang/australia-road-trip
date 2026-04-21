@@ -42,6 +42,12 @@ body {
   touch-action: manipulation;
 }
 
+@media (max-width: 767px) {
+  input, textarea, select {
+    font-size: 16px;
+  }
+}
+
 #root {
   height: 100vh;
   display: flex;
